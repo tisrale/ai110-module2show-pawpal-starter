@@ -5,12 +5,25 @@
 **a. Initial design**
 
 - Briefly describe your initial UML design.
+
+My initial design has four classes: `Owner`, `Pet`, `Task`, and `Scheduler`. An Owner has many Pets, each Pet has many Tasks, and the Scheduler works from the Owner to build a daily plan. I kept the Scheduler connected only to the Owner, since it can reach every pet and task through it.
+
 - What classes did you include, and what responsibilities did you assign to each?
+
+- **Owner**: stores the owner's name, how many minutes they have available today, their preferences, and their list of pets. It can add a pet and collect all tasks across its pets.
+- **Pet**: stores basic pet info (name, species, age) and the pet's care tasks. It can add and remove tasks.
+- **Task**: represents one care activity, with a title, duration, priority, category, frequency, and whether it's completed. It can mark itself complete and turn its priority into a number for sorting.
+- **Scheduler**: the planning logic. It sorts tasks by priority, fits them into the owner's available time starting from `day_start`, keeps track of which tasks were scheduled and which were skipped, and explains the plan.
 
 **b. Design changes**
 
 - Did your design change during implementation?
+
+Yes. The design changed when I reviewed my first UML draft.
+
 - If yes, describe at least one change and why you made it.
+
+In my first draft, `Scheduler.build_plan()` returned a plain list and `explain_plan()` took no input. That meant `explain_plan()` had no way to know which tasks were scheduled or which were skipped for lack of time, and skipped tasks are an important part of explaining the plan. I added two attributes to the Scheduler, `scheduled` and `skipped`. `build_plan()` fills both, and `explain_plan()` reads them to explain what made it into the day and what didn't.
 
 ---
 
