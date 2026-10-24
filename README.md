@@ -42,16 +42,33 @@ pip install -r requirements.txt
 6. Connect your logic to the Streamlit UI in `app.py`.
 7. Refine UML so it matches what you actually built.
 
+## 🧩 Implementation Summary
+
+The logic layer lives in `pawpal_system.py` and has four classes:
+
+- **`Task`**: one care activity (title, duration, priority, category, frequency, completion status). It can mark itself complete and turn its priority into a number for sorting.
+- **`Pet`**: a pet's details and its list of tasks. Adding a task also stamps the task with the pet's name.
+- **`Owner`**: the owner's name, available minutes for the day, and their pets. `get_all_tasks()` returns every pet's tasks in one list.
+- **`Scheduler`**: the planner. It reads tasks from `Owner.get_all_tasks()`, so it works across all pets.
+
+**How a plan is built:** `Scheduler.build_plan()` drops completed tasks, sorts the rest by priority (shorter tasks first on ties), and adds tasks in that order while they fit in the owner's available minutes. A task that doesn't fit is skipped, and the scheduler keeps checking the shorter tasks after it. `explain_plan()` then lists each scheduled task with its start and end time, starting from `day_start`, followed by the skipped tasks.
+
+`main.py` runs a demo with two pets, and `tests/test_pawpal.py` holds the pytest tests.
+
 ## 🖥️ Sample Output
 
-Paste a sample of your app's CLI or Streamlit output here so a reader can see what a generated plan looks like:
+Output of `python main.py` (one owner with 90 minutes available, two pets, five tasks):
 
 ```
-# e.g.:
-# Daily plan for Biscuit (Golden Retriever):
-#   08:00 — Morning walk (30 min) [priority: high]
-#   09:00 — Feeding (10 min) [priority: high]
-#   ...
+=== Today's Schedule ===
+Daily plan for Jordan (65 of 90 minutes used):
+  08:00-08:05  Luna: Give medication (5 min) [priority: high]
+  08:05-08:15  Luna: Feeding (10 min) [priority: high]
+  08:15-08:45  Mochi: Morning walk (30 min) [priority: high]
+  08:45-09:05  Luna: Play time (20 min) [priority: medium]
+Skipped (not enough time left):
+  Mochi: Bath (45 min) [priority: low]
+Tasks are chosen highest priority first; on a tie, shorter tasks go first so more of them fit.
 ```
 
 ## 🧪 Testing PawPal+
