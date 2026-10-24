@@ -13,6 +13,7 @@ class Task:
     category: str = "general"
     frequency: str = "daily"  # "daily" or "weekly"
     completed: bool = False
+    pet_name: str = ""  # set by Pet.add_task() so the plan can show whose task it is
 
     def mark_complete(self) -> None:
         """Mark this task as done."""
@@ -33,7 +34,7 @@ class Pet:
     tasks: list[Task] = field(default_factory=list)
 
     def add_task(self, task: Task) -> None:
-        """Add a care task for this pet."""
+        """Add a care task for this pet and set the task's pet_name."""
         pass
 
     def remove_task(self, task: Task) -> None:

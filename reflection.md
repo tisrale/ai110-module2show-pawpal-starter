@@ -25,6 +25,8 @@ Yes. The design changed when I reviewed my first UML draft.
 
 In my first draft, `Scheduler.build_plan()` returned a plain list and `explain_plan()` took no input. That meant `explain_plan()` had no way to know which tasks were scheduled or which were skipped for lack of time, and skipped tasks are an important part of explaining the plan. I added two attributes to the Scheduler, `scheduled` and `skipped`. `build_plan()` fills both, and `explain_plan()` reads them to explain what made it into the day and what didn't.
 
+After writing the class skeleton, I asked AI to review it for missing relationships and logic bottlenecks. It pointed out that a `Task` didn't know which pet it belonged to. Since `Owner.get_all_tasks()` combines every pet's tasks into one list, the Scheduler lost track of whose task was whose, so the plan couldn't say "Mochi: Walk". I added a `pet_name` attribute to `Task`, and `Pet.add_task()` will set it automatically when a task is added.
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
