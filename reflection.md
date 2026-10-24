@@ -27,6 +27,8 @@ In my first draft, `Scheduler.build_plan()` returned a plain list and `explain_p
 
 After writing the class skeleton, I asked AI to review it for missing relationships and logic bottlenecks. It pointed out that a `Task` didn't know which pet it belonged to. Since `Owner.get_all_tasks()` combines every pet's tasks into one list, the Scheduler lost track of whose task was whose, so the plan couldn't say "Mochi: Walk". I added a `pet_name` attribute to `Task`, and `Pet.add_task()` will set it automatically when a task is added.
 
+For smarter scheduling I added an optional `time` ("HH:MM") and a `due_date` to `Task`. Without a time there was nothing to sort by clock or to check for overlaps, and without a due date a recurring task couldn't say when it's next needed. Completing a task through `Pet.complete_task()` now adds the next occurrence. The Scheduler gained `sort_by_time()`, `filter_tasks()`, `detect_conflicts()`, and a `timeline` that keeps fixed-time tasks at their time and fits flexible tasks into the gaps.
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
@@ -40,6 +42,12 @@ After writing the class skeleton, I asked AI to review it for missing relationsh
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+**Main tradeoff: conflicts are reported, not fixed.** My scheduler checks whether fixed-time tasks overlap for their whole duration, not just whether they start at the same minute (a 30-minute walk at 08:30 clashes with medication at 08:45). When it finds a clash, it only adds a warning like `[different pets] Mochi: Morning walk at 08:30 overlaps Luna: Give medication at 08:45`. It doesn't move either task, and it doesn't crash; a badly typed time like "8am" also becomes a warning instead of an error.
+
+This is reasonable because the owner picked those times for a reason. Medication may have to be given at a set hour, and a feeding may be tied to when the owner leaves for work, so the app shouldn't quietly change them. A warning leaves the decision to the owner. Tasks with no fixed time are a different case: nobody chose their time, so the scheduler moves them into free gaps automatically, and they never cause a conflict.
+
+**Smaller tradeoff: readability over speed.** `detect_conflicts()` uses `itertools.combinations` to compare every pair of fixed-time tasks, which is O(n²). An earlier version sorted the tasks and stopped checking early, which is faster for large lists but harder to follow. A pet owner has maybe 5–20 tasks a day (at most about 190 pairs), so the speed difference doesn't matter, and code that's easy to read is easier to fix later. If the app ever had to schedule thousands of tasks, I'd bring back the early stop.
 
 ---
 
