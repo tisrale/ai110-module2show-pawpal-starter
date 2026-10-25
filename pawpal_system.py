@@ -97,13 +97,19 @@ class Pet:
     def complete_task(self, task: Task, completed_on: date | None = None) -> "Task | None":
         """Mark a task done and, if it repeats, add its next occurrence to this pet.
 
+        Completing a task that is already done does nothing, so the next occurrence
+        is never added twice.
+
         Args:
             task: One of this pet's tasks.
             completed_on: The day it was finished. Defaults to today.
 
         Returns:
-            The newly added next-occurrence Task, or None if the task doesn't repeat.
+            The newly added next-occurrence Task, or None if the task doesn't repeat
+            or was already completed.
         """
+        if task.completed:
+            return None
         task.mark_complete()
         upcoming = task.next_occurrence(completed_on)
         if upcoming is not None:
@@ -185,20 +191,26 @@ class Scheduler:
         return sorted(tasks, key=lambda task: (-task.priority_score(), task.duration_minutes))
 
     def sort_by_time(self, tasks: list[Task]) -> list[Task]:
-        """Return tasks in clock order; tasks with no fixed time go last.
+        """Return tasks in clock order; tasks with no valid fixed time go last.
 
-        The sort key is the tuple (has no time, time). Python compares tuples item by
-        item, so False (has a time) sorts before True (no time), and within each group
-        the "HH:MM" strings sort as text. That matches clock order only when times are
-        zero-padded ("08:30", not "8:30").
+        The sort key is the tuple (has no valid time, minutes after midnight). Python
+        compares tuples item by item, so False (has a time) sorts before True (no time).
+        Comparing minutes instead of the "HH:MM" text keeps "8:30" before "10:00".
+        A task with an invalid time is treated as any time, like in build_plan().
 
         Args:
             tasks: The tasks to sort. The list itself isn't changed.
 
         Returns:
-            A new sorted list.
+            A new sorted list. Tasks that tie keep their original order.
         """
-        return sorted(tasks, key=lambda task: (task.time == "", task.time))
+        return sorted(
+            tasks,
+            key=lambda task: (
+                not has_valid_time(task),
+                to_minutes(task.time) if has_valid_time(task) else 0,
+            ),
+        )
 
     def filter_tasks(self, pet_name: str | None = None, completed: bool | None = None) -> list[Task]:
         """Return the owner's tasks, optionally only one pet's and/or only done/not-done ones.
